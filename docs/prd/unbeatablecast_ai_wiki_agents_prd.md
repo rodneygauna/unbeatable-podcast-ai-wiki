@@ -1,7 +1,7 @@
 # Product Requirements Document: UnbeatableCast AI Wiki Intelligence System
 
 **Status:** Draft for planning and review
-**Version:** 0.1
+**Version:** 0.2
 **Date:** October 12, 2026
 **Product type:** Internal, human-supervised AI research and wiki-maintenance workflow
 **Primary property:** [UnbeatableCast Wiki](https://unbeatablecast.fandom.com/wiki/UnbeatableCast_Wiki)
@@ -12,7 +12,7 @@ The UnbeatableCast AI Wiki Intelligence System will ingest authorized episode co
 
 The system's initial role is **research and editorial assistance**, not autonomous publication. Each suggested wiki change must be grounded in identifiable episode evidence, compared with the current wiki, and approved by a human reviewer before being published.
 
-The architecture will use a combination of deterministic software for discovery, retrieval, storage and scheduling; existing integrations such as RSS feeds, YouTube APIs and transcript-capable MCP services; and specialized AI workflows for interpretation, continuity, wiki comparison and validation. GitHub Copilot Agent Skills may document repeatable procedures and connect to MCP tools in VS Code. The system must not assume Spotify or YouTube provide unrestricted audio or transcript access.
+The architecture will use deterministic software for discovery, retrieval and record keeping; the official [UnbeatableCast YouTube channel](https://www.youtube.com/@UnbeatableCast) as the primary episode catalog and evidence reference; Spotify links as corresponding alternate audio-listening sources; and RSS as supplemental metadata where available. In the pilot, a human will start each run from VS Code/GitHub Copilot. Transcript acquisition will try accessible YouTube captions first, then evaluate no-extra-cost alternatives; episodes without a suitable source remain explicitly blocked. The system must not assume Spotify or YouTube provide unrestricted audio or transcript access.
 
 ## 2. Problem Statement
 
@@ -24,13 +24,13 @@ There is no reliable, centralized workflow to connect episodes with evidence-bac
 
 ### 3.1 Goals
 
-1. Discover and catalog published episodes without duplicate processing across Spotify, YouTube and podcast RSS listings.
+1. Discover and catalog published episodes from the official YouTube channel, linking corresponding Spotify audio versions and using RSS as a supplemental source where useful.
 2. Obtain available and permitted transcript or audio inputs with timestamps and provenance.
 3. Produce detailed, chronological notes that preserve meaningful scenes, actions and outcomes.
 4. Maintain a cross-episode knowledge base of entities, relationships, facts and changes over time.
 5. Detect wiki content that is missing, outdated, incomplete or potentially inconsistent with episode evidence.
 6. Deliver clear page-specific change proposals, with sources and human approval controls.
-7. Support historical backfill and ongoing new-episode processing with observable job status and retry handling.
+7. Validate whether historical backfill is worthwhile after the pilot, and support observable, manually started episode processing with retry handling.
 
 ### 3.2 Proposed pilot acceptance targets
 
@@ -42,7 +42,7 @@ These are initial targets to validate during the pilot, not measured results.
 | Major-event recall              |                       ≥90% | Comparison with human-created event checklist                                                      |
 | Evidence traceability           |                       100% | Every proposed factual wiki addition has an episode/source reference and timestamp where available |
 | Wiki recommendation usefulness  |                       ≥80% | Human reviewer rates proposals useful/actionable                                                   |
-| Unsupported factual publication |                          0 | Editorial audit of approved/published changes                                                      |
+| Unsupported factual wiki edits |                          0 | Editorial audit of approved/published Fandom changes                                                |
 | Duplicate processing            |     0 avoidable duplicates | Unique episode identity and ingest logs                                                            |
 
 Record cost per episode, processing duration, transcript availability, speaker accuracy and rate of human corrections as additional pilot observations rather than hard launch gates.
@@ -51,16 +51,16 @@ Record cost per episode, processing duration, transcript availability, speaker a
 
 ### In scope — MVP
 
-- Discover episodes and metadata through a verified RSS feed and/or official platform discovery interfaces.
-- Associate corresponding Spotify and YouTube listings with one canonical episode record.
-- Retrieve existing transcripts where access is available and permitted; flag unavailable content.
-- Support ingestion of authorized audio for transcription if necessary.
+- Discover and catalog episodes from the official UnbeatableCast YouTube channel as the primary source.
+- Associate each YouTube episode with its corresponding Spotify audio listing when available; use RSS as a supplemental metadata and cross-check source.
+- Prefer accessible YouTube captions; evaluate free alternatives for transcription if captions are missing or inadequate, and flag unavailable content.
+- Retain transcript source material in the project workspace for internal analysis, subject to applicable source, provider, and repository access terms.
 - Segment transcripts into scenes and extract narrative events and changes.
 - Track recurring characters, Pokémon, locations, organizations and arcs.
 - Maintain source-level evidence, ambiguity classifications and historical state.
 - Read relevant public wiki pages where permitted; compare them to verified findings.
 - Produce Markdown episode notes and human-reviewable wiki change proposals.
-- Run a three-episode pilot followed by an incremental historical backfill.
+- Run a three-episode pilot; decide whether to backfill the archive after evaluating pilot results.
 
 ### Out of scope — MVP
 
@@ -90,17 +90,18 @@ The pilot assumes one operator/reviewer; multi-editor permissions may be added l
 2. **Never infer canon from speculation.** Character beliefs, player hypotheses and jokes must be labeled accurately.
 3. **Preserve history.** Do not overwrite an earlier character or Pokémon state without recording when and why it changed.
 4. **Human editorial control.** No automatic publishing in MVP.
-5. **Reusable integrations first.** Prefer RSS, existing services and maintained MCP tools over custom scraping.
+5. **YouTube-first discovery.** Use the official YouTube channel as the primary episode catalog; link Spotify audio versions and use RSS as a supplemental source. Prefer official interfaces and maintained integrations over custom scraping.
 6. **Graceful degradation.** Missing transcripts yield an explicit blocked/pending status, not a fabricated summary.
 7. **Idempotent processing.** Reprocessing the same episode should not create duplicate records or wiki proposals.
 8. **Portable prompts and schemas.** Keep business logic independent of one LLM or IDE vendor wherever practical.
+9. **No incremental spend.** Use existing Copilot credits and no-extra-cost tools; stop with an explicit blocked status rather than incur a charge.
 
 ## 7. End-to-End Workflow
 
-1. **Discover:** Poll or manually query verified RSS and supported platform endpoints for new episodes.
-2. **Resolve identity:** Match listings into one canonical episode using stable IDs, normalized titles, dates and duration tolerances; flag uncertain matches.
-3. **Acquire inputs:** Retrieve accessible captions/transcripts or authorized audio, retain provenance, and record rights/access status.
-4. **Transcribe/normalize:** When needed, run speech recognition and diarization; normalize names using a maintained glossary without concealing uncertain corrections.
+1. **Discover:** The operator manually starts a run from VS Code/GitHub Copilot and checks the official UnbeatableCast YouTube channel; consult RSS and Spotify as supplemental sources.
+2. **Resolve identity:** Create one canonical episode record anchored by its YouTube video ID, link the corresponding Spotify episode and any RSS item using stable IDs, normalized titles, dates and duration tolerances, and flag uncertain matches.
+3. **Acquire inputs:** Try accessible YouTube captions first, then a tested no-extra-cost transcription option when needed. Retain provenance and record access status. Channel presence does not guarantee caption availability or permission to retrieve or process content.
+4. **Transcribe/normalize:** When needed, use the selected no-extra-cost option for speech recognition and diarization; normalize names using a maintained glossary without concealing uncertain corrections.
 5. **Segment:** Split a timestamped transcript into overlapping analysis windows or scene boundaries; account for context between segments.
 6. **Extract:** Capture scenes, factual claims, character actions, Pokémon changes, locations, battles and unresolved threads.
 7. **Reconcile:** Resolve entities against the knowledge base, apply historical changes, and identify inconsistencies or uncertain claims.
@@ -118,7 +119,7 @@ The following are _logical responsibilities_. MVP may implement them as skills o
 | --------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Orchestrator          | Control execution order, retries, state and reporting                                             | Episode job record                               |
 | 1. Episode Ingestion  | Discover, match and catalog episodes; acquire authorized sources                                  | Canonical episode metadata and source references |
-| 2. Transcription      | Normalize available transcripts or generate from permitted audio, with timestamps and diarization | Transcript segments and quality flags            |
+| 2. Transcription      | Normalize accessible captions or use a tested, permitted, no-extra-cost fallback, with timestamps and diarization | Transcript segments and quality flags            |
 | 3. Narrative Analysis | Extract detailed scenes, entities, events and consequences                                        | Structured episode/event notes                   |
 | 4. Continuity & Lore  | Compare with history, update candidate states and identify contradictions                         | Time-aware entity changes and continuity report  |
 | 5. Wiki Analysis      | Inspect relevant wiki pages and recommend concrete changes                                        | Page-specific proposed edits                     |
@@ -128,11 +129,11 @@ The following are _logical responsibilities_. MVP may implement them as skills o
 
 **Functional requirements**
 
-- **ING-01:** Discover an episode from a verified public podcast RSS feed, if available.
+- **ING-01:** Discover episodes from the official UnbeatableCast YouTube channel as the primary catalog; use RSS and Spotify as supplemental sources.
 - **ING-02:** Capture canonical episode identifier, series, arc, episode number, title, description, release date/time, duration and available platform URLs.
-- **ING-03:** Link the Spotify entry, YouTube video and RSS item to a single canonical record.
+- **ING-03:** Anchor the canonical episode record on its YouTube video ID and link the corresponding Spotify audio entry and RSS item when available.
 - **ING-04:** Detect duplicate records and uncertain matches; require review when matching confidence is insufficient.
-- **ING-05:** Attempt transcript retrieval only through appropriate authorized mechanisms.
+- **ING-05:** Prefer accessible YouTube captions; use a free transcription alternative only after evaluating its access method, terms, cost, and data handling.
 - **ING-06:** Preserve transcript source, language, availability, timestamp coverage and quality indicators.
 - **ING-07:** Where transcript is unavailable, set `needs_transcription` or `blocked_source_access` rather than inventing content.
 - **ING-08:** Support re-runs, incremental ingestion, source changes and a persistent status record.
@@ -150,7 +151,7 @@ The following are _logical responsibilities_. MVP may implement them as skills o
 
 ### 8.2 Agent 2 — Transcription requirements
 
-- **TRN-01:** Accept existing transcripts or audio provided through authorized access.
+- **TRN-01:** Prefer available YouTube captions; accept other transcripts or audio only through a tested, permitted, no-extra-cost path.
 - **TRN-02:** Preserve time-linked chunks; support approximate timestamps when sentence-level timing is unavailable.
 - **TRN-03:** Distinguish speaker ID from fictional character identity; allow unresolved speaker labels.
 - **TRN-04:** Separate in-character speech, out-of-character conversation, GM narration and mechanics when supported by the evidence.
@@ -199,23 +200,21 @@ Tools below are **candidates for evaluation**, not yet validated against the pod
 
 | Integration/tool                                                                                            | Candidate use                                                                                  | Caveats / decision                                                                            |
 | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Podcast RSS (feed URL to be verified)                                                                       | Primary episode discovery, GUIDs, titles, dates, descriptions and potentially audio enclosures | Prefer if catalog is comprehensive; permission to retrieve/store audio must still be assessed |
-| YouTube Data API                                                                                            | Find channel uploads/playlists and retrieve video metadata                                     | API does not generally provide arbitrary public-video transcript text                         |
-| Spotify Web API                                                                                             | Cross-reference show/episode metadata and platform URLs                                        | Not a general-purpose audio or transcript download API; optional if RSS suffices              |
-| [TranscriptFetch MCP server](https://github.com/TranscriptFetch/mcp-server)                                 | Candidate YouTube discovery/transcript connector                                               | Third-party dependency; evaluate pricing, policy compliance and accuracy                      |
-| [kimtaeyoon83/mcp-server-youtube-transcript](https://github.com/kimtaeyoon83/mcp-server-youtube-transcript) | Candidate focused transcript MCP server                                                        | Check maintenance, reliability, caption availability and allowed access                       |
-| [toorop/youtube-transcript-mcp](https://github.com/toorop/youtube-transcript-mcp)                           | Candidate transcript alternative                                                               | Evaluate underlying yt-dlp approach against platform terms and rights                         |
+| Official [UnbeatableCast YouTube channel](https://www.youtube.com/@UnbeatableCast) + YouTube Data API        | Primary episode discovery and video reference; retrieve channel uploads/playlists and metadata | Verify catalog coverage during discovery. The official [captions download API](https://developers.google.com/youtube/v3/docs/captions/download) requires permission to edit the video; it is not a general public-video transcript API. |
+| Spotify Web API                                                                                             | Link the corresponding Spotify audio version to each canonical YouTube episode                 | Secondary listening source, not the episode catalog or transcript source; not a general-purpose audio or transcript download API |
+| Podcast RSS (feed URL to be verified)                                                                       | Supplemental metadata, stable GUIDs, publication details and potentially audio enclosures      | Use for cross-checking or filling metadata gaps; permission to retrieve/store audio must still be assessed |
+| [Xenova Whisper Web](https://github.com/xenova/whisper-web)                                                  | Candidate browser-based, open-source speech-to-text fallback                                  | MIT-licensed application code; evaluate the hosted demo's current availability, model licensing, CPU runtime, and data handling before use. Do not assume demo uploads remain local. |
 | [github/awesome-copilot](https://github.com/github/awesome-copilot)                                         | Patterns for Copilot agents and skills                                                         | Resource catalog rather than a verified podcast ingestion solution                            |
-| GitHub Copilot Agent Skills                                                                                 | Reusable instructions for ingestion/analysis workflows                                         | Not a substitute for runtime tools, ingestion database or scheduled execution                 |
+| GitHub Copilot Agent Skills                                                                                 | Reusable instructions for ingestion/analysis workflows                                         | Not a substitute for transcript acquisition or a continuously running ingestion service       |
 | MediaWiki API / Fandom-supported editing interfaces                                                         | Read wiki pages and eventually support approved editing                                        | Confirm Fandom availability, restrictions and permissions before use                          |
 
-**Preferred ingestion starting stack:** verified RSS catalog + official YouTube metadata discovery + one tested transcript MCP option + a Copilot ingestion skill. Add Spotify API only if its data fills a real gap. Add speech-to-text processing when licensed source audio is available and transcripts are missing or unreliable.
+**Preferred pilot stack:** official YouTube channel catalog + Spotify episode links for alternate listening + supplemental RSS metadata where available + accessible YouTube captions + a Copilot-driven workflow. If captions are missing or inadequate, benchmark a no-install browser-based Whisper option and other no-extra-cost alternatives whose terms and data handling are acceptable. Do not add paid APIs, paid overages, or services requiring billing setup. If no suitable no-cost source is available, mark the episode blocked and report why.
 
-**Tool selection gate:** test at least three representative episodes (older, recent, challenging dialogue). Check transcript access, timestamp precision, name accuracy, total cost, rate limits, rights compliance and failure modes before committing to any provider.
+**Tool selection gate:** test the first three episodes listed below. Check caption availability, timestamp precision, name accuracy, CPU runtime, no-cost limits, model/service terms, data handling and failure modes before selecting a fallback. The owner reports a Copilot “Plus” plan; verify its exact account plan and use only included AI credits. Disable additional paid usage so runs stop when the included allowance is exhausted.
 
 ## 10. Knowledge Base and Data Model
 
-A relational database (SQLite for pilot; PostgreSQL if scale/concurrency warrants) is the recommended source of structured truth. Original transcript references and source metadata should be preserved separately. Full-text search is initially sufficient; embeddings/vector search may be introduced if factual retrieval quality requires it.
+Human-readable Markdown and JSON files in the project repository are the recommended canonical knowledge base for the pilot, making episode records, entity histories and review changes easy to inspect in Git. Keep full transcripts in the project's source-material area rather than embedding them in generated notes. Repository visibility and access must be set appropriately before storing them. A local SQLite index may be added later as a rebuildable convenience if cross-episode queries become cumbersome; it is not the initial source of truth. Full-text search is initially sufficient; embeddings/vector search may be introduced if factual retrieval quality requires it.
 
 ### 10.1 Core records
 
@@ -259,8 +258,8 @@ Store exact source references for assertions, including episode, time span, tran
 Each processed episode should yield:
 
 - Identifying details (arc, episode, date, sources and transcript quality)
+- Scene-by-scene notes focused on meaningful actions and outcomes, with timestamped YouTube links as the primary evidence references
 - Short executive recap
-- Chronological scene-by-scene notes with source times
 - Important character developments
 - Pokémon captures/evolutions/team changes and battles where applicable
 - Key NPCs, organizations, locations and item changes
@@ -281,17 +280,19 @@ Each recommendation includes:
 - Wiki revision read and proposed edit status
 - Approver decision, notes and published revision when applicable
 
-The recommendation report should avoid implying a change occurred until publication is verified.
+Recommendations may cover existing or new pages for characters, Pokémon, episodes, locations, organizations, and items. Propose broadly during the pilot, but flag material uncertainty and avoid implying a wiki change occurred until publication is verified. Public repository drafts must be labeled `AI-generated; unreviewed` until a human has reviewed them.
 
 ## 12. Review, Approval, and Publication
 
 ### MVP workflow
 
-1. Show all proposed edits grouped by wiki page.
+1. Generate Markdown episode notes and wiki proposals, with a separate pull request for each episode.
 2. Provide source references and source-context snippets for each substantive claim.
-3. Allow reviewer to accept, reject or request correction.
+3. Label proposals as AI-generated and unreviewed; the sole pilot operator reviews the output and records corrections, approval, or rejection.
 4. Preserve decision history and resulting edited text.
-5. Support manual copy into Fandom; record publication confirmation only after verification.
+5. Keep Fandom publication manual. The operator transfers approved copy into the wiki and records publication only after verification.
+
+The pilot is manually started from VS Code/GitHub Copilot. New-episode processing has a target turnaround of one week after the operator starts a run; automated polling and background scheduling are deferred.
 
 ### Future assisted editing
 
@@ -303,15 +304,16 @@ Wiki editors' local policies, license/attribution rules and community expectatio
 
 - **Traceability:** Every factual recommendation has a verifiable source and workflow version.
 - **Privacy and credentials:** Keep API keys and account tokens out of Git; use secret management and least privileges.
-- **Copyright and terms:** Verify permitted podcast audio/transcript acquisition, retention and model-processing rights. Do not bypass protections or redistribute transcripts wholesale.
+- **Source and service terms:** Verify access, retention, and processing terms for episode material and selected tools. Do not bypass platform protections. Keep source transcripts in the project workspace, with repository visibility set appropriately before storage; do not present them as public outputs.
 - **Robustness:** Each stage can retry independently; failures cannot silently skip missing episodes.
 - **Observability:** Capture source status, job timing, cost estimate, token/audio usage, errors and retry history.
 - **Idempotency:** Key records by stable IDs and deduplicate cross-platform entries.
 - **Versioning:** Record prompt/skill version, model/service version and transcript version so outputs can be audited.
 - **Change control:** Maintain a searchable history of reviewer decisions and any wiki edits.
 - **Quality:** Detect long silent/missing segments, hallucinated citations and low-confidence speaker attribution.
-- **Retention:** Define authorized retention and deletion practices for audio, transcripts and derived records.
-- **Budget controls:** Use processing limits and report costs; exact cost targets are TBD after provider testing.
+- **Retention:** Retain transcripts in the project source-material area for internal evidence verification; define deletion and repository-access controls before ingesting the pilot.
+- **Budget controls:** No separate paid APIs, paid overages, or tools requiring billing setup. Use accessible captions first, then only no-extra-cost transcription options; stop and report a blocked episode if none works. Use only the owner's included Copilot allowance and disable additional paid usage.
+- **Resource limits:** The operator's machine is CPU-only. Avoid requiring local software installation for the pilot; benchmark browser-based options and report runtime before selecting a fallback.
 
 ## 14. Repository and Skills Organization (Proposed)
 
@@ -340,6 +342,10 @@ unbeatablecast-agents/
 │   ├── canon-guidelines.md
 │   ├── wiki-conventions.md
 │   └── pilot-evaluation.md
+├── data/
+│   ├── episodes/                # Markdown notes and JSON event records
+│   ├── entities/                # Canonical entity and state-history records
+│   └── source-material/         # Retained transcripts; protect with appropriate repo access
 └── schemas/                   # Future record and output schemas
 ```
 
@@ -349,27 +355,35 @@ Skills specify _how_ to do repeatable tasks and required evidence/output standar
 
 ### Phase 0 — Source and wiki discovery
 
-**Deliverables:** verified RSS source and complete catalog estimate; Spotify/YouTube account/channel associations; sample video coverage; transcript availability assessment; review of wiki structures, community conventions and rights/access requirements.
+**Deliverables:** verify official YouTube channel association and catalog coverage; map the supplied Spotify show to YouTube episodes; check the first three episodes for accessible captions; benchmark no-cost transcript options and Copilot credit use; inspect wiki structures and conventions; set repository visibility and source-material handling.
 
-**Exit criterion:** an approved, documented source-access strategy with no unresolved critical permissions issue.
+**Exit criterion:** a documented no-extra-cost source and processing path for the pilot, with repository access and tool terms checked.
 
 ### Phase 1 — Three-episode pilot
 
-**Deliverables:** ingestion of three consecutive or otherwise representative episodes; canonical matching; transcript acquisition or authorized transcription; detailed notes; structured events; human-reviewable wiki change reports; evaluation scores.
+**Pilot episodes, in original release order:**
 
-**Exit criterion:** pilot meets acceptable accuracy and traceability thresholds or identifies specific remediations.
+1. [Episode 1](https://youtu.be/eEmoq6v2M9M)
+2. [Episode 2](https://youtu.be/15PJ3PBhcEw)
+3. [Episode 3](https://youtu.be/03TuT2XpAwk)
+
+**Spotify show:** [UnbeatableCast](https://open.spotify.com/show/0nZ5jCbpDj3LKS7ICAqi4S)
+
+**Deliverables:** one pull request per episode containing labeled Markdown notes, JSON/Markdown knowledge records, and human-reviewable proposals across relevant page types; timestamped YouTube references; human audit and corrections.
+
+**Exit criterion:** the sole operator evaluates the provisional accuracy and traceability goals, documents corrections, and identifies remediations. If no free and suitable transcript path is available, record the episode as blocked rather than incur a charge.
 
 ### Phase 2 — Historical backfill
 
-**Deliverables:** chronological, incremental processing of the archive by story arc; entity glossary updates; continuity reviews at arc boundaries; remediation of historical contradictions.
+Whether to backfill the full archive or selected arcs will be decided after the pilot. If approved, process chronologically by story arc, update the entity glossary, and review continuity at arc boundaries.
 
-**Exit criterion:** target historical catalog processed with an auditable coverage report and manageable unresolved-review queue.
+**Exit criterion:** to be set after the pilot.
 
 ### Phase 3 — New-episode operations
 
-**Deliverables:** scheduled discovery, incremental processing, alerting on source failures, cost tracking and regular reviewer reports.
+Scheduled discovery is deferred. Initially, the operator manually starts processing after a new YouTube release, targeting a report within one week. Reconsider scheduling only after the pilot.
 
-**Exit criterion:** reliable handling of new releases without duplicates or unnoticed failures.
+**Exit criterion:** reliable manual processing without duplicates or unnoticed failures.
 
 ### Phase 4 — Optional assisted wiki editing
 
@@ -381,62 +395,68 @@ Skills specify _how_ to do repeatable tasks and required evidence/output standar
 
 | Risk                                     | Impact                       | Proposed mitigation                                                           |
 | ---------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------- |
-| Missing or blocked YouTube captions      | No transcript available      | Authorized audio/transcription fallback; explicit blocked state               |
-| Third-party MCP server breaks            | Ingestion disruption         | Interchangeable providers, tested fallback, version pinning                   |
+| Missing or blocked YouTube captions      | No transcript available      | Try a tested no-extra-cost fallback; otherwise set an explicit blocked state  |
+| Free transcription option is too slow or limited | Pilot delay or unusable output | Benchmark the first three episodes and report runtime/limits before choosing a fallback |
+| Copilot credits are exhausted            | Processing pauses or unexpected cost | Disable extra paid usage; stop at the included allowance and retry after reset |
 | Inaccurate names and speaker attribution | Wrong character history      | Entity glossary, uncertain labels and review checkpoints                      |
 | Out-of-character speech treated as canon | False wiki facts             | Canon classifications, specialized verification                               |
 | Cross-platform duplicate episodes        | Duplicate event records      | Canonical ID, aliases and idempotent operations                               |
 | Historical contradictions and retcons    | Confused timelines           | Evidence-preserving, temporal claims model                                    |
 | Incomplete or inaccessible wiki API      | Poor comparison              | Manual page export or approved alternative access; do not bypass restrictions |
-| Copyright/platform rules                 | Compliance risk              | Check rights and terms; minimize stored/copied source text                    |
-| Excessive operating cost                 | Project becomes uneconomical | Sample benchmarking, staged processing, caching, quotas                       |
+| Copyright/platform rules                 | Compliance risk              | Verify source-handling requirements; keep retained transcripts in the project source-material area and out of generated public outputs |
+| Repository access is too broad for source material | Unintended transcript exposure | Set repository visibility/access appropriately before retaining transcripts; label generated drafts clearly |
 | Incorrect wiki publication               | Community trust impact       | Human approval, revision comparison, audit trail                              |
 
 ## 17. Dependencies and Open Questions
 
-Before implementation, answer or validate:
+Before implementation, validate:
 
-1. What is the **official RSS feed URL**, and does it contain the full historical archive?
-2. Which Spotify show and YouTube channel/playlist entries are official? Are their catalogs complete and equivalent?
-3. Are captions present and obtainable for representative old and new YouTube episodes? Are timestamps and speaker details adequate?
-4. Has the podcast publisher authorized downloading, storing and transcribing episode audio if needed?
-5. What are the wiki's current page categories, templates and policies for citations, bot contributions and editorial approval?
-6. What is the expected cadence of new episodes, and how quickly must recommendations be ready?
-7. Who is the initial human reviewer and who can publish to the wiki?
-8. Which model/transcription providers meet budget, accuracy, rights and data-retention requirements?
-9. What processing/storage budget and local-versus-cloud deployment constraints apply?
-10. How should ambiguous speaker identities, alternate versions of episodes, retcons and disputed canon be adjudicated?
+1. Whether the YouTube channel's full archive, including older or special episodes, is complete.
+2. Caption availability and quality for the three supplied pilot episodes; benchmark the no-install Whisper Web candidate and any other no-extra-cost option for CPU runtime, timestamp quality, and data handling.
+3. The exact Copilot plan associated with the owner's “Copilot Plus” account and how to disable any paid usage beyond included credits.
+4. Repository visibility and access controls for retained source transcripts before pilot ingestion.
+5. Current wiki page categories, templates, citation conventions, and community policies.
+6. Whether to backfill the full archive or selected story arcs after pilot evaluation.
 
 ## 18. Initial Product Decisions and Recommended Defaults
 
-| Decision                   | Initial recommendation                                                                        |
-| -------------------------- | --------------------------------------------------------------------------------------------- |
-| Publishing                 | Human-review-only; manual edits for MVP                                                       |
-| Backfill                   | Chronological, arc by arc                                                                     |
-| Analysis detail            | Scene-level notes and source-linked events                                                    |
-| Ingestion source           | Verified RSS for catalog; YouTube for video discovery/transcript evaluation; Spotify optional |
-| Implementation environment | Develop in VS Code/GitHub Copilot, with portable skills and interchangeable MCP tools         |
-| Database                   | SQLite pilot; consider PostgreSQL later                                                       |
-| Search                     | Full-text first; optional semantic/vector search later                                        |
-| Agent topology             | One orchestrator with specialized steps/skills before independent autonomous agents           |
-| Storage of media           | Only where rights/access allow; retain source references by default                           |
-| Validation                 | Evidence-based checks and human approval before wiki publication                              |
+| Decision                   | Current decision                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Pilot episodes             | First three episodes in original release order; URLs listed in Phase 1                                                      |
+| Episode discovery          | Official YouTube channel is primary; Spotify audio links are secondary; RSS is supplemental                                |
+| Evidence links             | Timestamped YouTube links are primary; show Spotify as an alternate listening link                                         |
+| Pilot detail and coverage  | Scene-by-scene meaningful actions/outcomes; propose broadly across relevant page types, including new pages when useful     |
+| Pilot operator/reviewer    | Owner is sole operator and reviewer; ambiguous canon is flagged for human adjudication                                      |
+| Pilot execution            | Manually started from VS Code/GitHub Copilot; no background schedule; target report within one week of a run                |
+| Pilot outputs              | Markdown and JSON in Git; one pull request per episode; drafts labeled AI-generated and unreviewed                          |
+| Fandom publication         | Manual human review and publication only; no automatic wiki edits                                                          |
+| Knowledge base             | Markdown/JSON is canonical; consider a derived local SQLite index only if needed                                           |
+| Transcript source          | YouTube captions first; evaluate free fallback only if missing/inadequate; block an episode if no suitable free path exists |
+| Source retention           | Retain transcripts in the project source-material area; set repository visibility/access appropriately before ingestion    |
+| Cost                       | No additional paid services or paid overages; use only included Copilot credits and no billing setup for transcription      |
+| Pilot evaluation           | Owner audits all three episodes and records corrections against provisional PRD targets                                    |
+| Historical backfill        | Decide scope after the pilot                                                                                                 |
+| Agent topology             | One orchestrator with specialized steps/skills before independent autonomous agents                                        |
+| Search                     | Full-text first; optional semantic/vector search later                                                                      |
 
 ## 19. Definition of Done for MVP
 
-The MVP is complete when a reviewer can select an episode, obtain a source-grounded detailed recap and structured event record, inspect correctly linked historical character/Pokémon changes, view targeted wiki recommendations with supporting citations and uncertainties, and approve or reject them without any automatic wiki publishing. The workflow must detect duplicates, show blocked/failed source states, preserve processing provenance, and demonstrate acceptable quality on the documented three-episode pilot.
+The MVP is complete when the sole operator can manually process the first three episodes, obtain scene-level source-grounded notes and Markdown/JSON event records, inspect linked historical character/Pokémon changes, and review one clearly labeled pull request per episode containing timestamped YouTube evidence and wiki proposals. The workflow must link Spotify audio versions where matched, detect duplicates, show blocked/failed transcript states, preserve processing provenance, stay within the no-extra-cost constraint, and support human-only Fandom publication. The operator audits the pilot against the provisional targets; archive backfill and scheduled processing remain future decisions.
 
 ---
 
 ## References for Further Evaluation
 
 - [UnbeatableCast Wiki](https://unbeatablecast.fandom.com/wiki/UnbeatableCast_Wiki)
-- [TranscriptFetch MCP Server](https://github.com/TranscriptFetch/mcp-server)
-- [YouTube Transcript MCP Server — kimtaeyoon83](https://github.com/kimtaeyoon83/mcp-server-youtube-transcript)
-- [YouTube Transcript MCP Server — toorop](https://github.com/toorop/youtube-transcript-mcp)
+- [UnbeatableCast YouTube channel](https://www.youtube.com/@UnbeatableCast)
+- [UnbeatableCast Spotify show](https://open.spotify.com/show/0nZ5jCbpDj3LKS7ICAqi4S)
+- [Xenova Whisper Web](https://github.com/xenova/whisper-web)
 - [GitHub Awesome Copilot](https://github.com/github/awesome-copilot)
 - [YouTube Data API documentation](https://developers.google.com/youtube/v3)
+- [YouTube captions download API](https://developers.google.com/youtube/v3/docs/captions/download)
 - [Spotify Web API documentation](https://developer.spotify.com/documentation/web-api)
+- [GitHub Copilot plans](https://docs.github.com/en/copilot/get-started/plans)
+- [GitHub Copilot individual usage and billing](https://docs.github.com/en/copilot/concepts/billing-and-usage/individuals/billing)
 - [MediaWiki API documentation](https://www.mediawiki.org/wiki/API:Main_page)
 
-**Note:** External tool support and platform policies must be rechecked at implementation time. This document is a planning artifact and does not assert that any proposed MCP connector has been successfully tested against UnbeatableCast.
+**Note:** External tool support and platform policies must be rechecked at implementation time. Whisper Web and any free hosted service remain candidates, not validated transcript sources. Copilot plan names, allowances and billing controls can change; verify the account's current plan and disable additional paid usage before the pilot.
